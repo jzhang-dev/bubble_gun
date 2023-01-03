@@ -12,8 +12,10 @@ from BubbleGun.output_certain_chains import write_certain_chains
 from BubbleGun.connect_bubbles import connect_bubbles
 from BubbleGun.find_parents import find_parents
 
-parser = argparse.ArgumentParser(description='Find Bubble Chains.', add_help=True)
-subparsers = parser.add_subparsers(help='Available subcommands', dest="subcommands")
+parser = argparse.ArgumentParser(
+    description='Find Bubble Chains.', add_help=True)
+subparsers = parser.add_subparsers(
+    help='Available subcommands', dest="subcommands")
 
 parser._positionals.title = 'Subcommands'
 parser._optionals.title = 'Global Arguments'
@@ -24,16 +26,20 @@ parser.add_argument("-g", "--in_graph", metavar="GRAPH_PATH", dest="in_graph",
                     default=None, type=str, help="graph file path (GFA or VG)")
 
 parser.add_argument("--log_file", dest="log_file", type=str, default="log.log",
-                        help="The name/path of the log file. Default: log.log")
+                    help="The name/path of the log file. Default: log.log")
 
 parser.add_argument("--log", dest="log_level", type=str, default="DEBUG",
                     help="The logging level [DEBUG, INFO, WARNING, ERROR, CRITICAL]")
 
 ########################## Bubble chains options ###############################
-bubble_parser = subparsers.add_parser('bchains', help='Command for detecting bubble chains')
+bubble_parser = subparsers.add_parser(
+    'bchains', help='Command for detecting bubble chains')
 
 bubble_parser.add_argument("--bubble_json", dest="out_json", default=None, type=str,
                            help="Outputs Bubbles, Superbubbles, and Chains as a JSON file")
+
+bubble_parser.add_argument("--chain_type", dest="chain_type", default="both", type=str, choices=("simple", "super", "both"),
+                           help="Output bubble type")
 
 bubble_parser.add_argument("--only_simple", action="store_true",
                            help="If used then only simple bubbles are detected")
@@ -47,27 +53,31 @@ bubble_parser.add_argument("--save_memory", action="store_true", dest="low_memor
 bubble_parser.add_argument("--chains_gfa", dest="chains_gfa", default=None, type=str,
                            help="Output only bubble chains as a GFA file")
 
-bubble_parser.add_argument("--fasta", dest="out_fasta", metavar="FASTA",
+bubble_parser.add_argument("--output_bubble_branches", dest="branch_fasta_path", metavar="BRANCH_FASTA",
                            type=str, default=None,
-                           help="Outputs the bubble branches as fasta file (doesn't work with memory saving)")
+                           help="Write the two branches of each simple bubble to BRANCH_FASTA. This option requires--only_simple and is not compatible with --save_memory.")
 
-bubble_parser.add_argument("--out_haplos", dest="out_haplos", action="store_true",
-                           help="output randomly two haplotypes for each chain (doesn't work with memory saving)")
+bubble_parser.add_argument("--output_haplotypes",
+                           dest="haplotype_fasta_path", metavar="HAPLOTYPE_FASTA",
+                           help="Write two haplotypes to HAPLOTYPE_FASTA. For each chain, the two haplotypes walk through randomly chosen branches of each simple bubble. This option requires--only_simple and is not compatible with --save_memory.")
 
 ########################## Compact graph ###############################
-compact_parser = subparsers.add_parser('compact', help='Command for compacting graphs')
+compact_parser = subparsers.add_parser(
+    'compact', help='Command for compacting graphs')
 
 compact_parser.add_argument(dest="compacted", metavar="PATH_COMPACTED",
                             default=None, type=str, help="Compacted graph output path")
 
 ########################## Biggest component ###############################
-biggest_comp_parser = subparsers.add_parser('biggestcomp', help='Command for separating biggest component')
+biggest_comp_parser = subparsers.add_parser(
+    'biggestcomp', help='Command for separating biggest component')
 
 biggest_comp_parser.add_argument(dest="biggest_comp", metavar="PATH_BIG_COMP",
                                  default=None, type=str, help="Biggest component output path")
 
 ########################## BFS commands ###############################
-bfs_parser = subparsers.add_parser('bfs', help='Command for separating neighborhood')
+bfs_parser = subparsers.add_parser(
+    'bfs', help='Command for separating neighborhood')
 
 bfs_parser.add_argument("--start", dest="starting_nodes", metavar="START_NODES", type=str, nargs="+",
                         default=None, help="Give the starting node(s) for neighborhood extraction")
@@ -95,7 +105,8 @@ bfs_parser.add_argument("--output_neighborhood", dest="output_neighborhood", met
 #                         help="A pickled dictionary output path. contains read_id:[nodes]")
 
 ########################## output chain ###############################
-output_chain = subparsers.add_parser('chainout', help='Outputs certain chain(s) given by their id as a GFA file')
+output_chain = subparsers.add_parser(
+    'chainout', help='Outputs certain chain(s) given by their id as a GFA file')
 output_chain.add_argument("--json_file", dest="json_file", metavar="JSON_FILE",
                           type=str, default=None, help="The JSON file wtih bubble chains information")
 
@@ -136,7 +147,7 @@ def main():
     #         parser.print_help()
     #         sys.exit(0)
 
-    ####################### chainout
+    # chainout
     if args.subcommands == "chainout":
         if args.json_file is not None:
             if args.chain_ids is not None:
@@ -146,7 +157,8 @@ def main():
                     graph = Graph(args.in_graph)
 
                     logging.info("Outputting chains chosen...")
-                    write_certain_chains(args.json_file, graph, args.chain_ids, args.output_chain)
+                    write_certain_chains(
+                        args.json_file, graph, args.chain_ids, args.output_chain)
 
                 else:
                     print("You did not provide the output file path")
@@ -177,7 +189,7 @@ def main():
     #         print("Please provide the path to the gam file")
     #         sys.exit(1)
 
-    ####################### compact graph
+    # compact graph
     if args.subcommands == "compact":
         if args.compacted is not None:
             logging.info("Reading Graph...")
@@ -192,7 +204,7 @@ def main():
             print("Please provide the path for the output compacted graph")
             sys.exit(1)
 
-    ####################### biggest component
+    # biggest component
     if args.subcommands == "biggestcomp":
         if args.biggest_comp is not None:
             logging.info("Reading Graph...")
@@ -202,16 +214,17 @@ def main():
             logging.info("Finding Biggest Component...")
             biggest_comp = graph.biggest_comp()
             logging.info("Writing Biggset Component...")
-            graph.write_graph(output_file=args.biggest_comp, set_of_nodes=biggest_comp)
+            graph.write_graph(output_file=args.biggest_comp,
+                              set_of_nodes=biggest_comp)
             logging.info("Done...")
         else:
             print("Please provide the path for the biggest component graph")
             sys.exit(1)
 
-    ####################### Bubbles
+    # Bubbles
     if args.subcommands == "bchains":
         # output_file = args.out_bubbles
-        if (args.low_memory and (args.out_fasta is not None)) or (args.low_memory and (args.chains_gfa is not None)):
+        if (args.low_memory and (args.branch_fasta is not None)) or (args.low_memory and (args.chains_gfa is not None)):
             print("You cannot combine memory saving with --fasta or --chains_gfa")
             sys.exit(0)
 
@@ -220,10 +233,12 @@ def main():
                 print("You cannot have save memory and output haplos")
                 sys.exit()
             if not args.only_simple:
-                print("If you want 2 haplotyhpes out, then you need to choose --only_simple")
+                print(
+                    "If you want 2 haplotyhpes out, then you need to choose --only_simple")
                 sys.exit()
             if args.only_super:
-                print("You cannot have out haplotypes and both only_simple and only_super, only works with only_simple")
+                print(
+                    "You cannot have out haplotypes and both only_simple and only_super, only works with only_simple")
                 sys.exit()
 
         logging.info("Reading Graph...")
@@ -231,7 +246,8 @@ def main():
 
         logging.info("Finding bubbles...")
 
-        find_bubbles(graph, only_simple=args.only_simple, only_super=args.only_super)
+        find_bubbles(graph, only_simple=args.only_simple,
+                     only_super=args.only_super)
 
         logging.info("Connecting bubbles...")
         # connecting individual bubbles into chains
@@ -248,13 +264,17 @@ def main():
               "The number of insertions is {}".format(b_numbers[0], b_numbers[1],
                                                       b_numbers[2]))
 
-        if (0,0,0) != (b_numbers[0], b_numbers[1],b_numbers[2]):
+        if (0, 0, 0) != (b_numbers[0], b_numbers[1], b_numbers[2]):
 
             if not args.low_memory:
-                print("Sequence coverage of the bubble chains is {}%".format(graph.chain_cov_seq()))
-                print("Node coverage of the bubble chains is {}%".format(graph.chain_cov_node()))
-                print("The longest chain seq-wise has {} bp".format(graph.longest_chain_seq().length_seq()))
-                print("The longest chain bubble_wise has {} bubbles".format(len(graph.longest_chain_bubble())))
+                print("Sequence coverage of the bubble chains is {}%".format(
+                    graph.chain_cov_seq()))
+                print("Node coverage of the bubble chains is {}%".format(
+                    graph.chain_cov_node()))
+                print(
+                    "The longest chain seq-wise has {} bp".format(graph.longest_chain_seq().length_seq()))
+                print("The longest chain bubble_wise has {} bubbles".format(
+                    len(graph.longest_chain_bubble())))
 
             if args.out_json is not None:
                 logging.info("Outputting bubble chains gfa...")
@@ -268,19 +288,20 @@ def main():
                 logging.info("Outputting bubble chains gfa...")
                 graph.write_b_chains(output=args.chains_gfa)
 
-            if args.out_fasta is not None:
+            if args.branch_fasta is not None:
                 if args.low_memory:
                     print("You cannot have low memory and output fasta")
                     sys.exit()
 
                 logging.info("Outputting each bubble branch...")
-                write_bubbles(graph, args.out_fasta)
+                write_bubbles(graph, args.branch_fasta)
 
             if args.out_haplos:
-                logging.info("Outputting two random haplotypes of each bubble chain...")
+                logging.info(
+                    "Outputting two random haplotypes of each bubble chain...")
                 output_chains_fasta(graph)
 
-    ####################### BFS
+    # BFS
     if args.subcommands == "bfs":
         if args.starting_nodes is not None:
             if args.bfs_len is not None:
@@ -290,7 +311,8 @@ def main():
                     graph = Graph(args.in_graph)
 
                     for n in args.starting_nodes:
-                        logging.info("extracting neighborhood around node {}".format(n))
+                        logging.info(
+                            "extracting neighborhood around node {}".format(n))
                         set_of_nodes = bfs(graph, n, args.bfs_len)
                         if not graph.compacted:
                             graph.write_graph(set_of_nodes=set_of_nodes,
@@ -308,6 +330,7 @@ def main():
         else:
             print("You did not give the starting node(s)")
         logging.info("Done...")
+
 
 if __name__ == "__main__":
     main()
